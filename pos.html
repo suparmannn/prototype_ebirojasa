@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - POS Kasir</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Root Variables & Global Reset --- */
+        :root {
+            --primary-blue: #0A7EFF; --primary-blue-dark: #0056b3; --sidebar-bg: #1C2E46; --bg-light: #F8F9FA; --card-bg: #FFFFFF; --text-dark: #343A40; --text-medium: #6C757D; --text-light: #CED4DA; --border-color: #E9ECEF; --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.08); --shadow-input: 0 0 0 3px rgba(10, 126, 255, 0.1);
+        }
+        body, html { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; background-color: var(--bg-light); height: 100%; overflow: hidden; color: var(--text-dark); }
+        * { box-sizing: border-box; }
+        .admin-layout { display: flex; height: 100vh; }
+
+        /* --- Sidebar --- */
+        .sidebar { width: 280px; background-color: var(--sidebar-bg); padding: 30px 0; display: flex; flex-direction: column; flex-shrink: 0; position: relative; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        .sidebar-logo { display: flex; align-items: center; justify-content: center; padding: 0 20px 30px; margin-bottom: 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        .sidebar-logo svg { height: 35px; margin-right: 12px; color: var(--primary-blue); filter: drop-shadow(0 0 5px rgba(10, 126, 255, 0.5)); }
+        .sidebar-logo span { font-size: 1.6rem; font-weight: 700; color: #ffffff; letter-spacing: 0.5px; }
+        .sidebar-nav { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav li { margin-bottom: 8px; }
+        .sidebar-nav a { display: flex; align-items: center; padding: 14px 30px; text-decoration: none; color: var(--text-light); font-weight: 500; font-size: 0.98rem; transition: all 0.3s ease; position: relative; }
+        .sidebar-nav a i { margin-right: 18px; font-size: 1.1rem; width: 20px; text-align: center; }
+        .sidebar-nav li.active a { background: linear-gradient(90deg, var(--primary-blue), rgba(10, 126, 255, 0.8)); color: #ffffff; border-radius: 0 50px 50px 0; box-shadow: 0 5px 15px rgba(10, 126, 255, 0.3); left: 0; }
+        .sidebar-nav li:not(.active) a:hover { background-color: rgba(255, 255, 255, 0.08); color: #ffffff; border-radius: 0 50px 50px 0; }
+        
+        /* --- Content --- */
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; padding: 30px; overflow-y: auto; }
+        
+        /* --- Topbar (Telah Diupdate) --- */
+        .topbar {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* BERUBAH: Mendorong ke kanan */
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-light);
+            animation: fadeInDown 0.5s ease-out;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 25px; }
+        .topbar-icon { color: var(--text-medium); font-size: 1.3rem; position: relative; cursor: pointer; transition: color 0.2s; }
+        .topbar-icon:hover { color: var(--primary-blue); }
+        .topbar-icon .badge { position: absolute; top: -8px; right: -10px; background-color: #F44336; color: white; font-size: 0.75rem; padding: 4px 7px; border-radius: 50%; line-height: 1; font-weight: 600; }
+        .user-menu { display: flex; align-items: center; cursor: pointer; padding: 5px 10px; border-radius: 10px; transition: background-color 0.2s; }
+        .user-menu:hover { background-color: var(--bg-light); }
+        .user-menu img { width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; border: 2px solid var(--border-color); object-fit: cover; }
+        .user-menu span { font-weight: 600; color: var(--text-dark); margin-right: 10px; }
+        .user-menu i { color: var(--text-medium); font-size: 0.9rem; }
+
+        /* --- Animations --- */
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* --- Buttons --- */
+        .btn { padding: 12px 25px; border: none; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.3s ease; }
+        .btn-secondary { background-color: var(--bg-light); color: var(--text-medium); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background-color: var(--border-color); }
+        .btn-primary { background: linear-gradient(45deg, var(--primary-blue), #5e9eff); color: white; box-shadow: 0 5px 15px rgba(10, 126, 255, 0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(10, 126, 255, 0.4); }
+        .btn-danger { background: #F44336; color: white; }
+        
+        /* --- POS CSS --- */
+        .pos-header-card {
+            background-color: var(--card-bg); border-radius: 15px; padding: 25px; box-shadow: var(--shadow-light); margin-bottom: 30px; animation: fadeInUp 0.5s ease-out 0.2s forwards; opacity: 0;
+        }
+        .pos-header-card h1 { font-size: 2rem; color: var(--text-dark); margin: 0 0 20px 0; font-weight: 700; }
+        .check-transaction-form { display: flex; gap: 15px; align-items: center; }
+        .check-transaction-form .form-group { flex-grow: 1; margin: 0; }
+        .check-transaction-form label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-medium); }
+        .check-transaction-form input { width: 100%; padding: 12px 18px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 1rem; background-color: #ffffff; transition: all 0.3s ease; color: var(--text-dark); }
+        .check-transaction-form input:focus { outline: none; border-color: var(--primary-blue); box-shadow: var(--shadow-input); background-color: #ffffff; }
+        #detail-hutang { margin-top: 15px; }
+
+        .pos-layout { display: flex; gap: 30px; flex-grow: 1; overflow: hidden; }
+        .pos-form-container { flex: 2; background-color: var(--card-bg); border-radius: 15px; padding: 30px; box-shadow: var(--shadow-light); display: flex; flex-direction: column; overflow-y: auto; animation: fadeInUp 0.5s ease-out 0.4s forwards; opacity: 0; }
+        
+        #kategori-pilihan { display: flex; gap: 20px; height: 100%; justify-content: center; align-items: center; }
+        #kategori-pilihan .btn-kategori { padding: 40px; font-size: 1.5rem; font-weight: 600; width: 300px; border: 2px dashed var(--border-color); background-color: var(--bg-light); color: var(--text-medium); transition: all 0.3s ease; }
+        #kategori-pilihan .btn-kategori:hover { border-color: var(--primary-blue); background-color: #EBF5FF; color: var(--primary-blue); transform: scale(1.05); }
+        
+        .pos-form { display: none; }
+        .pos-form.active { display: block; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom: 0; }
+        .form-group.full-width { grid-column: 1 / -1; }
+
+        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-medium); }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 18px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            background-color: #ffffff; /* Input Putih */
+            transition: all 0.3s ease;
+            color: var(--text-dark);
+            font-family: 'Poppins', sans-serif;
+        }
+        .form-group input:focus, .form-group select:focus { 
+            outline: none; 
+            border-color: var(--primary-blue); 
+            box-shadow: var(--shadow-input); 
+            background-color: #ffffff; 
+        }
+        
+        .form-group input[readonly] { 
+            background-color: var(--bg-light); /* Readonly Abu-abu */
+            color: var(--text-dark); 
+            font-weight: 600; 
+            cursor: not-allowed;
+        }
+
+        .product-picker-container { display: flex; gap: 10px; }
+        .product-picker-container input { flex-grow: 1; }
+        .product-picker-container .btn-browse-produk { flex-shrink: 0; padding: 12px 15px; }
+
+        .pos-receipt-container { flex: 1; background-color: var(--card-bg); border-radius: 15px; padding: 30px; box-shadow: var(--shadow-light); display: flex; flex-direction: column; animation: fadeInUp 0.5s ease-out 0.6s forwards; opacity: 0; }
+        .pos-receipt-container h2 { margin: 0 0 20px 0; font-size: 1.5rem; font-weight: 600; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .receipt-body { flex-grow: 1; }
+        .receipt-item { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 1rem; }
+        .receipt-item span:first-child { color: var(--text-medium); }
+        .receipt-item span:last-child { color: var(--text-dark); font-weight: 500; }
+        .receipt-total { border-top: 2px dashed var(--border-color); padding-top: 20px; margin-top: 20px; }
+        .receipt-total .receipt-item { font-size: 1.1rem; font-weight: 600; }
+        .receipt-total .receipt-item.total { font-size: 1.5rem; color: var(--primary-blue); }
+        .receipt-total .receipt-item.total span { color: var(--primary-blue); }
+        .receipt-total .receipt-item.status-lunas span:last-child { color: #15803D; }
+        .receipt-total .receipt-item.status-terhutang span:last-child { color: #D92D20; }
+        .receipt-footer { margin-top: 20px; }
+        .receipt-footer .btn { width: 100%; }
+
+        /* --- Modal Produk --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-content { background-color: var(--card-bg); padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); width: 90%; max-width: 500px; transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+        .modal-content.large { max-width: 900px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; color: var(--text-dark); font-weight: 600; }
+        .modal-close-btn { background: none; border: none; font-size: 1.8rem; color: var(--text-medium); cursor: pointer; transition: color 0.2s; }
+        .modal-close-btn:hover { color: var(--text-dark); }
+        .page-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .filter-controls { display: flex; gap: 15px; flex-grow: 1; flex-wrap: wrap; }
+        .filter-select { padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9rem; background-color: var(--bg-light); font-family: 'Poppins', sans-serif; color: var(--text-medium); font-weight: 500; cursor: pointer; }
+        .filter-select:focus { outline: none; border-color: var(--primary-blue); }
+        .table-search { position: relative; width: 300px; }
+        .table-search input { width: 100%; padding: 10px 15px 10px 40px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 0.95rem; background-color: #ffffff; transition: all 0.3s ease; }
+        .table-search input:focus { outline: none; border-color: var(--primary-blue); box-shadow: var(--shadow-input); background-color: #ffffff; }
+        .table-search i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-medium); font-size: 1rem; }
+        .product-grid-wrapper { overflow-y: auto; max-height: 50vh; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .product-card { background-color: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; transition: all 0.3s ease; }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+        .product-card-header { padding: 15px 15px 10px; }
+        .badge-kategori { padding: 5px 12px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; color: var(--primary-blue); background-color: #EBF5FF; }
+        .badge-kategori.non-pajak { color: #15803D; background-color: #F0FDF4; }
+        .product-card-body { padding: 15px; flex-grow: 1; }
+        .product-card-body h3 { font-size: 1.1rem; font-weight: 600; color: var(--text-dark); margin: 0 0 8px; }
+        .product-card-body .detail-item { font-size: 0.85rem; color: var(--text-medium); margin-bottom: 4px; display: block; }
+        .product-card-footer { padding: 15px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .product-price { font-size: 1rem; font-weight: 700; color: var(--primary-blue); }
+        .btn-pilih-produk { padding: 8px 15px; font-size: 0.85rem; }
+        
+    </style>
+</head>
+<body>
+
+    <div class="admin-layout">
+        
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue">
+                    <path d="M4 17V8a2 2 0 0 1 2-2h8.5L20 10.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/>
+                    <path d="M10 2v4"/><path d="M10 18v4"/><path d="M10 6h4"/><path d="M10 18h4"/><path d="M6 10h4"/><path d="M6 14h4"/>
+                </svg>
+                <span>E-Biro Jasa</span>
+            </div>
+            
+            <ul class="sidebar-nav">
+                <li><a href="#"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard Utama</span></a></li>
+                <li><a href="data_portal.html"><i class="fas fa-fw fa-money-check-alt"></i><span>Data Portal PKB</span></a></li>
+                <li><a href="management_akun.html"><i class="fas fa-fw fa-users"></i><span>Management Akun</span></a></li>
+                <li><a href="management_produk.html"><i class="fas fa-fw fa-box"></i><span>Management Produk</span></a></li>
+                <li class="active"><a href="pos.html"><i class="fas fa-fw fa-cash-register"></i><span>POS</span></a></li>
+                <li><a href="laporan_transaksi.html"><i class="fas fa-fw fa-chart-line"></i><span>Laporan Transaksi</span></a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            
+            <div class="topbar">
+                <div class="topbar-right">
+                    <a href="#" class="topbar-icon"> <i class="fas fa-bell"></i> <span class="badge">3</span> </a>
+                    <div class="user-menu"> <img src="https://via.placeholder.com/40" alt="User Avatar"> <span>Admin</span> <i class="fas fa-chevron-down"></i> </div>
+                </div>
+            </div>
+
+            <div class="pos-header-card">
+                <h1>Cek Transaksi Lama</h1>
+                <div class="check-transaction-form">
+                    <div class="form-group">
+                        <label for="cek-no-kendaraan">Filter No Kendaraan</label>
+                        <input type="text" id="cek-no-kendaraan" placeholder="e.g: B 1234 ABC">
+                    </div>
+                    <button type="button" class="btn btn-primary" id="btn-cek-detail" style="align-self: flex-end;">Cek Detail</button>
+                    <button type="button" class="btn btn-secondary" id="btn-cetak-kwitansi" style="align-self: flex-end;" disabled>Cetak Kwitansi</button>
+                </div>
+                <div id="detail-hutang"></div>
+            </div>
+
+            <div class="pos-layout">
+                <div class="pos-form-container">
+                    <div id="kategori-pilihan">
+                        <button class="btn btn-kategori" id="btn-pajak"><i class="fas fa-car"></i><br>Produk Jasa Pajak</button>
+                        <button class="btn btn-kategori" id="btn-non-pajak"><i class="fas fa-tools"></i><br>Produk Jasa Non-Pajak</button>
+                    </div>
+
+                    <form id="form-pajak" class="pos-form">
+                        <h2>Transaksi Jasa Pajak <button type="button" id="btn-pajak-back" class="btn btn-secondary" style="float: right; padding: 8px 15px;">Ganti Kategori</button></h2>
+                        <div class="form-grid" style="margin-top: 20px;">
+                            <div class="form-group"> <label for="pos-pajak-nama">Nama Konsumen</label> <input type="text" id="pos-pajak-nama" required> </div>
+                            <div class="form-group"> <label for="pos-pajak-no-kendaraan">No. Kendaraan</label> <input type="text" id="pos-pajak-no-kendaraan" required> </div>
+                            <div class="form-group"> <label for="pos-pajak-kategori-stnk">Kategori STNK</label> <select id="pos-pajak-kategori-stnk" required> <option value="Mobil">Mobil</option> <option value="Motor">Motor</option> </select> </div>
+                            <div class="form-group"> <label for="pos-pajak-provinsi">Provinsi STNK</label> <select id="pos-pajak-provinsi" required> <option value="DKI Jakarta">DKI Jakarta</option> <option value="Banten">Banten</option> </select> </div>
+                            <div class="form-group full-width"> <label for="pos-pajak-kota">Kota/Kabupaten</label> <select id="pos-pajak-kota" required> <option value="Jakarta Pusat">Jakarta Pusat</option> <option value="Tangerang Selatan">Tangerang Selatan</option> </select> </div>
+                            <div class="form-group full-width">
+                                <label for="pos-pajak-jasa-nama">Produk Jasa</label>
+                                <div class="product-picker-container">
+                                    <input type="text" id="pos-pajak-jasa-nama" placeholder="Pilih produk jasa..." readonly required>
+                                    <input type="hidden" id="pos-pajak-jasa-harga" value="0">
+                                    <button type="button" class="btn btn-primary btn-browse-produk" data-target-kategori="Produk Jasa Pajak"> <i class="fas fa-search"></i> Cari </button>
+                                </div>
+                            </div>
+                            <div class="form-group"> <label for="pos-pajak-pkb">Jumlah PKB STNK</label> <input type="number" id="pos-pajak-pkb" value="0" required> </div>
+                            <div class="form-group"> <label for="pos-pajak-total">Total Bayar</label> <input type="text" id="pos-pajak-total" readonly> </div>
+                            <div class="form-group"> <label for="pos-pajak-tipe-bayar">Tipe Pembayaran</label> <select id="pos-pajak-tipe-bayar" required> <option value="Cash">Cash</option> <option value="Transfer">Transfer</option> </select> </div>
+                            <div class="form-group"> <label for="pos-pajak-jumlah-bayar">Jumlah yang Dibayarkan</label> <input type="number" id="pos-pajak-jumlah-bayar" value="0" required> </div>
+                            <div class="form-group"> <label for="pos-pajak-kembalian">Kembalian</label> <input type="text" id="pos-pajak-kembalian" readonly> </div>
+                            <div class="form-group"> <label for="pos-pajak-status">Status Pembayaran</label> <input type="text" id="pos-pajak-status" readonly> </div>
+                            <div class="form-group full-width"> <label for="pos-pajak-hutang">Jumlah Terhutang</label> <input type="text" id="pos-pajak-hutang" readonly> </div>
+                        </div>
+                    </form>
+                    
+                    <form id="form-non-pajak" class="pos-form">
+                        <h2>Transaksi Jasa Non-Pajak <button type="button" id="btn-nonpajak-back" class="btn btn-secondary" style="float: right; padding: 8px 15px;">Ganti Kategori</button></h2>
+                        <div class="form-grid" style="margin-top: 20px;">
+                            <div class="form-group full-width"> <label for="pos-nonpajak-nama">Nama Konsumen</label> <input type="text" id="pos-nonpajak-nama" required> </div>
+                            <div class="form-group full-width">
+                                <label for="pos-nonpajak-jasa-nama">Produk Jasa</label>
+                                <div class="product-picker-container">
+                                    <input type="text" id="pos-nonpajak-jasa-nama" placeholder="Pilih produk jasa..." readonly required>
+                                    <input type="hidden" id="pos-nonpajak-jasa-harga" value="0">
+                                    <button type="button" class="btn btn-primary btn-browse-produk" data-target-kategori="Produk Jasa Non-Pajak"> <i class="fas fa-search"></i> Cari </button>
+                                </div>
+                            </div>
+                            <div class="form-group full-width"> <label for="pos-nonpajak-total">Total Bayar</label> <input type="text" id="pos-nonpajak-total" readonly> </div>
+                            <div class="form-group"> <label for="pos-nonpajak-tipe-bayar">Tipe Pembayaran</label> <select id="pos-nonpajak-tipe-bayar" required> <option value="Cash">Cash</option> <option value="Transfer">Transfer</option> </select> </div>
+                            <div class="form-group"> <label for="pos-nonpajak-jumlah-bayar">Jumlah yang Dibayarkan</label> <input type="number" id="pos-nonpajak-jumlah-bayar" value="0" required> </div>
+                            <div class="form-group"> <label for="pos-nonpajak-kembalian">Kembalian</label> <input type="text" id="pos-nonpajak-kembalian" readonly> </div>
+                            <div class="form-group"> <label for="pos-nonpajak-status">Status Pembayaran</label> <input type="text" id="pos-nonpajak-status" readonly> </div>
+                            <div class="form-group full-width"> <label for="pos-nonpajak-hutang">Jumlah Terhutang</label> <input type="text" id="pos-nonpajak-hutang" readonly> </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="pos-receipt-container">
+                    <h2>Detail Transaksi</h2>
+                    <div class="receipt-body">
+                        <div class="receipt-item"> <span>Tgl Transaksi</span> <span id="receipt-tanggal">-</span> </div>
+                        <div class="receipt-item"> <span>Nama Konsumen</span> <span id="receipt-nama">-</span> </div>
+                        <div class="receipt-item"> <span>No. Kendaraan</span> <span id="receipt-no-kendaraan">-</span> </div>
+                        <hr style="border: none; border-top: 1px dashed var(--border-color); margin: 15px 0;">
+                        <div class="receipt-item"> <span>Produk Jasa</span> <span id="receipt-jasa-nama">-</span> </div>
+                        <div class="receipt-item"> <span>Harga Jasa</span> <span id="receipt-jasa-harga">-</span> </div>
+                        <div class="receipt-item"> <span>Jumlah PKB</span> <span id="receipt-pkb">-</span> </div>
+                    </div>
+                    <div class="receipt-total">
+                        <div class="receipt-item total"> <span>TOTAL</span> <span id="receipt-total">-</span> </div>
+                        <div class="receipt-item"> <span>Bayar</span> <span id="receipt-bayar">-</span> </div>
+                        <div class="receipt-item"> <span>Kembalian</span> <span id="receipt-kembalian">-</span> </div>
+                        <div class="receipt-item" id="receipt-status-item"> <span>Status</span> <span id="receipt-status">-</span> </div>
+                        <div class="receipt-item" id="receipt-hutang-item"> <span>Terhutang</span> <span id="receipt-hutang">-</span> </div>
+                    </div>
+                    <div class="receipt-footer">
+                        <button class="btn btn-primary" id="btn-save-print" disabled>Simpan & Cetak Nota</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="product-modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2 id="product-modal-title">Pilih Produk Jasa</h2>
+                <button class="modal-close-btn" id="product-modal-close-btn">&times;</button>
+            </div>
+            <div class="page-controls">
+                <div class="filter-controls">
+                    <div id="product-modal-filters-pajak">
+                        <select id="modal-filter-kategori-stnk" class="filter-select">
+                            <option value="all">Semua Kategori STNK</option>
+                            <option value="Mobil">Mobil</option>
+                            <option value="Motor">Motor</option>
+                        </select>
+                        <select id="modal-filter-provinsi" class="filter-select">
+                            <option value="all">Semua Provinsi</option>
+                            <option value="DKI Jakarta">DKI Jakarta</option>
+                            <option value="Banten">Banten</option>
+                            <option value="Jawa Barat">Jawa Barat</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="modal-product-search" placeholder="Cari berdasarkan Nama Produk Jasa">
+                </div>
+            </div>
+            <div class="product-grid-wrapper">
+                <div class="product-grid" id="modal-product-grid">
+                    <div class="product-card" data-kategori-jasa="Produk Jasa Pajak" data-kategori-stnk="Motor" data-provinsi="DKI Jakarta" data-kota="Jakarta Pusat" data-nama="BBN Motor (Baru)" data-harga="500000">
+                        <div class="product-card-header"> <span class="badge-kategori">Produk Jasa Pajak</span> </div>
+                        <div class="product-card-body"> <h3>BBN Motor (Baru)</h3> <span class="detail-item">Motor</span> <span class="detail-item">DKI Jakarta, Jakarta Pusat</span> </div>
+                        <div class="product-card-footer"> <span class="product-price">Rp 500.000</span> <button type="button" class="btn btn-primary btn-pilih-produk">Pilih</button> </div>
+                    </div>
+                    <div class="product-card" data-kategori-jasa="Produk Jasa Non-Pajak" data-kategori-stnk="" data-provinsi="" data-kota="" data-nama="Jasa Cek Fisik Bantuan" data-harga="150000">
+                        <div class="product-card-header"> <span class="badge-kategori non-pajak">Produk Jasa Non-Pajak</span> </div>
+                        <div class="product-card-body"> <h3>Jasa Cek Fisik Bantuan</h3> </div>
+                        <div class="product-card-footer"> <span class="product-price">Rp 150.000</span> <button type="button" class="btn btn-primary btn-pilih-produk">Pilih</button> </div>
+                    </div>
+                    <div class="product-card" data-kategori-jasa="Produk Jasa Pajak" data-kategori-stnk="Mobil" data-provinsi="Banten" data-kota="Tangerang Selatan" data-nama="Perpanjang STNK Mobil 5 Tahunan" data-harga="750000">
+                        <div class="product-card-header"> <span class="badge-kategori">Produk Jasa Pajak</span> </div>
+                        <div class="product-card-body"> <h3>Perpanjang STNK Mobil 5 Tahunan</h3> <span class="detail-item">Mobil</span> <span class="detail-item">Banten, Tangerang Selatan</span> </div>
+                        <div class="product-card-footer"> <span class="product-price">Rp 750.000</span> <button type="button" class="btn btn-primary btn-pilih-produk">Pilih</button> </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const formatRupiah = (number) => { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number); };
+            const getTodayDate = () => new Date().toISOString().split('T')[0];
+            const kategoriPilihan = document.getElementById('kategori-pilihan');
+            const btnPajak = document.getElementById('btn-pajak');
+            const btnNonPajak = document.getElementById('btn-non-pajak');
+            const formPajak = document.getElementById('form-pajak');
+            const formNonPajak = document.getElementById('form-non-pajak');
+            const btnSavePrint = document.getElementById('btn-save-print');
+            const btnPajakBack = document.getElementById('btn-pajak-back');
+            const btnNonPajakBack = document.getElementById('btn-nonpajak-back');
+            const rTanggal = document.getElementById('receipt-tanggal');
+            const rNama = document.getElementById('receipt-nama');
+            const rNoKendaraan = document.getElementById('receipt-no-kendaraan');
+            const rJasaNama = document.getElementById('receipt-jasa-nama');
+            const rJasaHarga = document.getElementById('receipt-jasa-harga');
+            const rPKB = document.getElementById('receipt-pkb');
+            const rTotal = document.getElementById('receipt-total');
+            const rBayar = document.getElementById('receipt-bayar');
+            const rKembalian = document.getElementById('receipt-kembalian');
+            const rStatusItem = document.getElementById('receipt-status-item');
+            const rStatus = document.getElementById('receipt-status');
+            const rHutangItem = document.getElementById('receipt-hutang-item');
+            const rHutang = document.getElementById('receipt-hutang');
+            const fpNama = document.getElementById('pos-pajak-nama');
+            const fpNoKendaraan = document.getElementById('pos-pajak-no-kendaraan');
+            const fpJasaNama = document.getElementById('pos-pajak-jasa-nama');
+            const fpJasaHarga = document.getElementById('pos-pajak-jasa-harga');
+            const fpBrowse = document.querySelector('#form-pajak .btn-browse-produk');
+            const fpPKB = document.getElementById('pos-pajak-pkb');
+            const fpTotal = document.getElementById('pos-pajak-total');
+            const fpBayar = document.getElementById('pos-pajak-jumlah-bayar');
+            const fpKembalian = document.getElementById('pos-pajak-kembalian');
+            const fpStatus = document.getElementById('pos-pajak-status');
+            const fpHutang = document.getElementById('pos-pajak-hutang');
+            const fnpNama = document.getElementById('pos-nonpajak-nama');
+            const fnpJasaNama = document.getElementById('pos-nonpajak-jasa-nama');
+            const fnpJasaHarga = document.getElementById('pos-nonpajak-jasa-harga');
+            const fnpBrowse = document.querySelector('#form-non-pajak .btn-browse-produk');
+            const fnpTotal = document.getElementById('pos-nonpajak-total');
+            const fnpBayar = document.getElementById('pos-nonpajak-jumlah-bayar');
+            const fnpKembalian = document.getElementById('pos-nonpajak-kembalian');
+            const fnpStatus = document.getElementById('pos-nonpajak-status');
+            const fnpHutang = document.getElementById('pos-nonpajak-hutang');
+            const cekNoKendaraan = document.getElementById('cek-no-kendaraan');
+            const btnCekDetail = document.getElementById('btn-cek-detail');
+            const btnCetakKwitansi = document.getElementById('btn-cetak-kwitansi');
+            const detailHutang = document.getElementById('detail-hutang');
+            const productModal = document.getElementById('product-modal');
+            const productModalCloseBtn = document.getElementById('product-modal-close-btn');
+            const productModalGrid = document.getElementById('modal-product-grid');
+            const modalFilterPajak = document.getElementById('product-modal-filters-pajak');
+            const modalFilterStnk = document.getElementById('modal-filter-kategori-stnk');
+            const modalFilterProvinsi = document.getElementById('modal-filter-provinsi');
+            const modalSearch = document.getElementById('modal-product-search');
+            let currentFormType = null;
+            let currentTotal = 0;
+            const showForm = (type) => {
+                kategoriPilihan.style.display = 'none';
+                currentFormType = type;
+                resetForm(false);
+                if (type === 'pajak') {
+                    formPajak.classList.add('active');
+                    formNonPajak.classList.remove('active');
+                } else {
+                    formPajak.classList.remove('active');
+                    formNonPajak.classList.add('active');
+                }
+                rTanggal.textContent = getTodayDate();
+            };
+            const resetForm = (backToChoice = true) => {
+                formPajak.reset();
+                formNonPajak.reset();
+                if (backToChoice) {
+                    kategoriPilihan.style.display = 'flex';
+                    formPajak.classList.remove('active');
+                    formNonPajak.classList.remove('active');
+                    currentFormType = null;
+                }
+                rTanggal.textContent = '-'; rNama.textContent = '-'; rNoKendaraan.textContent = '-';
+                rJasaNama.textContent = '-'; rJasaHarga.textContent = '-'; rPKB.textContent = '-';
+                rTotal.textContent = '-'; rBayar.textContent = '-'; rKembalian.textContent = '-';
+                rStatus.textContent = '-'; rHutang.textContent = '-';
+                rStatusItem.className = 'receipt-item';
+                rHutangItem.style.display = 'none';
+                btnSavePrint.disabled = true;
+                currentTotal = 0;
+            };
+            const calculateTotalsPajak = () => {
+                const pkb = parseFloat(fpPKB.value) || 0;
+                const jasaHarga = parseFloat(fpJasaHarga.value) || 0;
+                const jasaNama = fpJasaNama.value || '-';
+                const bayar = parseFloat(fpBayar.value) || 0;
+                currentTotal = pkb + jasaHarga;
+                let kembalian = bayar - currentTotal;
+                let hutang = 0;
+                let status = "Lunas";
+                if (kembalian < 0) {
+                    hutang = Math.abs(kembalian); kembalian = 0; status = "Terhutang";
+                }
+                fpTotal.value = formatRupiah(currentTotal);
+                fpKembalian.value = formatRupiah(kembalian);
+                fpStatus.value = status;
+                fpHutang.value = formatRupiah(hutang);
+                rJasaNama.textContent = jasaNama;
+                rJasaHarga.textContent = formatRupiah(jasaHarga);
+                rPKB.textContent = formatRupiah(pkb);
+                rTotal.textContent = formatRupiah(currentTotal);
+                rBayar.textContent = formatRupiah(bayar);
+                rKembalian.textContent = formatRupiah(kembalian);
+                rStatus.textContent = status;
+                if (hutang > 0) {
+                    rHutangItem.style.display = 'flex'; rHutang.textContent = formatRupiah(hutang);
+                    rStatusItem.className = 'receipt-item status-terhutang';
+                } else {
+                    rHutangItem.style.display = 'none'; rStatusItem.className = 'receipt-item status-lunas';
+                }
+                btnSavePrint.disabled = false;
+            };
+            const calculateTotalsNonPajak = () => {
+                const jasaHarga = parseFloat(fnpJasaHarga.value) || 0;
+                const jasaNama = fnpJasaNama.value || '-';
+                const bayar = parseFloat(fnpBayar.value) || 0;
+                currentTotal = jasaHarga;
+                let kembalian = bayar - currentTotal;
+                let hutang = 0;
+                let status = "Lunas";
+                if (kembalian < 0) {
+                    hutang = Math.abs(kembalian); kembalian = 0; status = "Terhutang";
+                }
+                fnpTotal.value = formatRupiah(currentTotal);
+                fnpKembalian.value = formatRupiah(kembalian);
+                fnpStatus.value = status;
+                fnpHutang.value = formatRupiah(hutang);
+                rJasaNama.textContent = jasaNama;
+                rJasaHarga.textContent = formatRupiah(jasaHarga);
+                rPKB.textContent = '-';
+                rTotal.textContent = formatRupiah(currentTotal);
+                rBayar.textContent = formatRupiah(bayar);
+                rKembalian.textContent = formatRupiah(kembalian);
+                rStatus.textContent = status;
+                if (hutang > 0) {
+                    rHutangItem.style.display = 'flex'; rHutang.textContent = formatRupiah(hutang);
+                    rStatusItem.className = 'receipt-item status-terhutang';
+                } else {
+                    rHutangItem.style.display = 'none'; rStatusItem.className = 'receipt-item status-lunas';
+                }
+                btnSavePrint.disabled = false;
+            };
+            const openProductModal = (kategori) => {
+                modalFilterStnk.value = "all";
+                modalFilterProvinsi.value = "all";
+                modalSearch.value = "";
+                if (kategori === 'Produk Jasa Non-Pajak') {
+                    modalFilterPajak.style.display = 'none';
+                } else {
+                    modalFilterPajak.style.display = 'flex';
+                }
+                filterModalProducts();
+                productModal.classList.add('show');
+            };
+            const closeProductModal = () => {
+                productModal.classList.remove('show');
+            };
+            const filterModalProducts = () => {
+                const searchTerm = modalSearch.value.toLowerCase();
+                const selectedStnk = modalFilterStnk.value;
+                const selectedProvinsi = modalFilterProvinsi.value;
+                const targetKategori = currentFormType === 'pajak' ? 'Produk Jasa Pajak' : 'Produk Jasa Non-Pajak';
+                
+                productModalGrid.querySelectorAll('.product-card').forEach(card => {
+                    const cardData = card.dataset;
+                    if (cardData.kategoriJasa !== targetKategori) {
+                        card.style.display = 'none';
+                        return;
+                    }
+                    const matchSearch = cardData.nama.toLowerCase().includes(searchTerm);
+                    const matchStnk = (selectedStnk === "all" || cardData.kategoriStnk === selectedStnk);
+                    const matchProvinsi = (selectedProvinsi === "all" || cardData.provinsi === selectedProvinsi);
+                    if (matchSearch && matchStnk && matchProvinsi) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            };
+            btnPajak.addEventListener('click', () => showForm('pajak'));
+            btnNonPajak.addEventListener('click', () => showForm('non-pajak'));
+            btnPajakBack.addEventListener('click', () => resetForm(true));
+            btnNonPajakBack.addEventListener('click', () => resetForm(true));
+            fpNama.addEventListener('input', () => rNama.textContent = fpNama.value || '-');
+            fpNoKendaraan.addEventListener('input', () => rNoKendaraan.textContent = fpNoKendaraan.value || '-');
+            fpPKB.addEventListener('input', calculateTotalsPajak);
+            fpBayar.addEventListener('input', calculateTotalsPajak);
+            fnpNama.addEventListener('input', () => {
+                rNama.textContent = fnpNama.value || '-';
+                rNoKendaraan.textContent = '-';
+            });
+            fnpBayar.addEventListener('input', calculateTotalsNonPajak);
+            btnSavePrint.addEventListener('click', () => {
+                if (currentTotal > 0) {
+                    alert('Mencetak nota...\nTransaksi berhasil disimpan.');
+                    resetForm(true);
+                } else {
+                    alert('Total masih nol, tidak ada yang disimpan.');
+                }
+            });
+            btnCekDetail.addEventListener('click', () => {
+                const noKend = cekNoKendaraan.value.toUpperCase();
+                resetForm(true);
+                detailHutang.innerHTML = '';
+                btnCetakKwitansi.disabled = true;
+                if (noKend === 'B 1234 ABC') {
+                    rTanggal.textContent = '2025-10-01'; rNama.textContent = 'Budi Santoso';
+                    rNoKendaraan.textContent = 'B 1234 ABC'; rJasaNama.textContent = 'Perpanjang STNK Mobil';
+                    rJasaHarga.textContent = formatRupiah(750000); rPKB.textContent = formatRupiah(1500000);
+                    rTotal.textContent = formatRupiah(2250000); rBayar.textContent = formatRupiah(2000000);
+                    rKembalian.textContent = formatRupiah(0); rStatus.textContent = 'Terhutang';
+                    rStatusItem.className = 'receipt-item status-terhutang';
+                    rHutangItem.style.display = 'flex'; rHutang.textContent = formatRupiah(250000);
+                    detailHutang.innerHTML = `<button class="btn btn-danger" id="btn-bayar-hutang">Bayar Sisa Tagihan: ${formatRupiah(250000)}</button>`;
+                    btnCetakKwitansi.disabled = false;
+                } else if (noKend === 'D 4321 XYZ') {
+                    rTanggal.textContent = '2025-10-05'; rNama.textContent = 'Citra Lestari';
+                    rNoKendaraan.textContent = 'D 4321 XYZ'; rJasaNama.textContent = 'BBN Motor';
+                    rJasaHarga.textContent = formatRupiah(500000); rPKB.textContent = formatRupiah(300000);
+                    rTotal.textContent = formatRupiah(800000); rBayar.textContent = formatRupiah(800000);
+                    rKembalian.textContent = formatRupiah(0); rStatus.textContent = 'Lunas';
+                    rStatusItem.className = 'receipt-item status-lunas';
+                    rHutangItem.style.display = 'none';
+                    btnCetakKwitansi.disabled = false;
+                } else {
+                    alert('Data transaksi tidak ditemukan.'); resetForm(true);
+                }
+            });
+            btnCetakKwitansi.addEventListener('click', () => {
+                alert('Mencetak kwitansi untuk: ' + cekNoKendaraan.value.toUpperCase());
+            });
+            fpBrowse.addEventListener('click', () => openProductModal('Produk Jasa Pajak'));
+            fnpBrowse.addEventListener('click', () => openProductModal('Produk Jasa Non-Pajak'));
+            productModalCloseBtn.addEventListener('click', closeProductModal);
+            modalSearch.addEventListener('keyup', filterModalProducts);
+            modalFilterStnk.addEventListener('change', filterModalProducts);
+            modalFilterProvinsi.addEventListener('change', filterModalProducts);
+            productModalGrid.addEventListener('click', (e) => {
+                if (e.target.classList.contains('btn-pilih-produk')) {
+                    const card = e.target.closest('.product-card');
+                    const data = card.dataset;
+                    if (currentFormType === 'pajak') {
+                        fpJasaNama.value = data.nama;
+                        fpJasaHarga.value = data.harga;
+                        calculateTotalsPajak();
+                    } else {
+                        fnpJasaNama.value = data.nama;
+                        fnpJasaHarga.value = data.harga;
+                        calculateTotalsNonPajak();
+                    }
+                    closeProductModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Management Produk</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Root Variables & Global Reset --- */
+        :root {
+            --primary-blue: #0A7EFF; --primary-blue-dark: #0056b3; --sidebar-bg: #1C2E46; --bg-light: #F8F9FA; --card-bg: #FFFFFF; --text-dark: #343A40; --text-medium: #6C757D; --text-light: #CED4DA; --border-color: #E9ECEF; --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.08); --shadow-input: 0 0 0 3px rgba(10, 126, 255, 0.1);
+        }
+        body, html { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; background-color: var(--bg-light); height: 100%; overflow: hidden; color: var(--text-dark); }
+        * { box-sizing: border-box; }
+        .admin-layout { display: flex; height: 100vh; }
+
+        /* --- Sidebar --- */
+        .sidebar { width: 280px; background-color: var(--sidebar-bg); padding: 30px 0; display: flex; flex-direction: column; flex-shrink: 0; position: relative; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        .sidebar-logo { display: flex; align-items: center; justify-content: center; padding: 0 20px 30px; margin-bottom: 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        .sidebar-logo svg { height: 35px; margin-right: 12px; color: var(--primary-blue); filter: drop-shadow(0 0 5px rgba(10, 126, 255, 0.5)); }
+        .sidebar-logo span { font-size: 1.6rem; font-weight: 700; color: #ffffff; letter-spacing: 0.5px; }
+        .sidebar-nav { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav li { margin-bottom: 8px; }
+        .sidebar-nav a { display: flex; align-items: center; padding: 14px 30px; text-decoration: none; color: var(--text-light); font-weight: 500; font-size: 0.98rem; transition: all 0.3s ease; position: relative; }
+        .sidebar-nav a i { margin-right: 18px; font-size: 1.1rem; width: 20px; text-align: center; }
+        .sidebar-nav li.active a { background: linear-gradient(90deg, var(--primary-blue), rgba(10, 126, 255, 0.8)); color: #ffffff; border-radius: 0 50px 50px 0; box-shadow: 0 5px 15px rgba(10, 126, 255, 0.3); left: 0; }
+        .sidebar-nav li:not(.active) a:hover { background-color: rgba(255, 255, 255, 0.08); color: #ffffff; border-radius: 0 50px 50px 0; }
+        
+        /* --- Content --- */
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; padding: 30px; overflow-y: auto; }
+        
+        /* --- Topbar (Telah Diupdate) --- */
+        .topbar {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* BERUBAH: Mendorong ke kanan */
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-light);
+            animation: fadeInDown 0.5s ease-out;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 25px; }
+        .topbar-icon { color: var(--text-medium); font-size: 1.3rem; position: relative; cursor: pointer; transition: color 0.2s; }
+        .topbar-icon:hover { color: var(--primary-blue); }
+        .topbar-icon .badge { position: absolute; top: -8px; right: -10px; background-color: #F44336; color: white; font-size: 0.75rem; padding: 4px 7px; border-radius: 50%; line-height: 1; font-weight: 600; }
+        .user-menu { display: flex; align-items: center; cursor: pointer; padding: 5px 10px; border-radius: 10px; transition: background-color 0.2s; }
+        .user-menu:hover { background-color: var(--bg-light); }
+        .user-menu img { width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; border: 2px solid var(--border-color); object-fit: cover; }
+        .user-menu span { font-weight: 600; color: var(--text-dark); margin-right: 10px; }
+        .user-menu i { color: var(--text-medium); font-size: 0.9rem; }
+
+        /* --- Content Area --- */
+        .content-area { flex-grow: 1; background-color: var(--card-bg); border-radius: 15px; padding: 30px; box-shadow: var(--shadow-light); display: flex; flex-direction: column; overflow: hidden; animation: fadeInUp 0.5s ease-out 0.2s forwards; opacity: 0; }
+        .content-header-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .content-header-left { display: flex; align-items: center; }
+        .back-button { background: none; border: none; font-size: 1.6rem; color: var(--text-medium); cursor: pointer; margin-right: 18px; transition: color 0.2s, transform 0.2s; }
+        .back-button:hover { color: var(--primary-blue); transform: translateX(-3px); }
+        .content-header-left h1 { font-size: 2rem; color: var(--text-dark); margin: 0; font-weight: 700; letter-spacing: -0.5px; }
+        .btn-add-new { background: linear-gradient(45deg, var(--primary-blue), #5e9eff); color: white; padding: 12px 25px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(10, 126, 255, 0.3); white-space: nowrap; cursor: pointer; }
+        .btn-add-new i { margin-right: 10px; font-size: 1.1rem; }
+        .btn-add-new:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(10, 126, 255, 0.4); }
+        
+        /* --- Animations --- */
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* --- CSS Produk (Filter, Grid, Card) --- */
+        .page-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .filter-controls { display: flex; gap: 15px; flex-grow: 1; flex-wrap: wrap; }
+        .filter-select { padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9rem; background-color: var(--bg-light); font-family: 'Poppins', sans-serif; color: var(--text-medium); font-weight: 500; cursor: pointer; }
+        .filter-select:focus { outline: none; border-color: var(--primary-blue); }
+        .table-search { position: relative; width: 300px; }
+        .table-search input { width: 100%; padding: 10px 15px 10px 40px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 0.95rem; background-color: #ffffff; /* Input putih */ transition: all 0.3s ease; }
+        .table-search input:focus { outline: none; border-color: var(--primary-blue); box-shadow: var(--shadow-input); background-color: #ffffff; }
+        .table-search i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-medium); font-size: 1rem; }
+        .product-grid-wrapper { flex-grow: 1; overflow-y: auto; margin-bottom: 25px; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+        .product-card { background-color: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; transition: all 0.3s ease; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); }
+        .product-card-header { padding: 20px 20px 15px; border-bottom: 1px solid var(--border-color); }
+        .badge-kategori { padding: 5px 12px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; color: var(--primary-blue); background-color: #EBF5FF; }
+        .badge-kategori.non-pajak { color: #15803D; background-color: #F0FDF4; }
+        .product-card-body { padding: 20px; flex-grow: 1; }
+        .product-card-body h3 { font-size: 1.25rem; font-weight: 600; color: var(--text-dark); margin: 0 0 10px; }
+        .product-card-body .detail-item { font-size: 0.9rem; color: var(--text-medium); margin-bottom: 5px; display: block; }
+        .product-card-footer { padding: 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .product-price { font-size: 1.15rem; font-weight: 700; color: var(--primary-blue); }
+        .product-actions { display: flex; gap: 15px; }
+        .product-actions a { color: var(--text-medium); font-size: 1.15rem; transition: color 0.2s, transform 0.2s; cursor: pointer; }
+        .product-actions a:hover { color: var(--primary-blue); transform: scale(1.1); }
+        .product-actions .action-delete:hover { color: #dc3545; }
+        
+        /* --- Pagination --- */
+        .pagination { display: flex; justify-content: center; align-items: center; border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: auto; }
+        .pagination a { text-decoration: none; color: var(--text-medium); padding: 8px 15px; font-weight: 500; }
+        .pagination a.current-page { color: var(--primary-blue); }
+        .pagination a:hover { color: var(--primary-blue); }
+        
+        /* --- Modal --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-content { background-color: var(--card-bg); padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); width: 90%; max-width: 500px; transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; color: var(--text-dark); font-weight: 600; }
+        .modal-close-btn { background: none; border: none; font-size: 1.8rem; color: var(--text-medium); cursor: pointer; transition: color 0.2s; }
+        .modal-close-btn:hover { color: var(--text-dark); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-medium); }
+        .form-group input, .form-group select { width: 100%; padding: 12px 18px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 1rem; background-color: #ffffff; transition: all 0.3s ease; color: var(--text-dark); font-family: 'Poppins', sans-serif; }
+        .form-group input[type=number]::-webkit-inner-spin-button, .form-group input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .form-group input[type=number] { -moz-appearance: textfield; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary-blue); box-shadow: var(--shadow-input); background-color: #ffffff; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.3s ease; }
+        .btn-secondary { background-color: var(--bg-light); color: var(--text-medium); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background-color: var(--border-color); }
+        .btn-primary { background: linear-gradient(45deg, var(--primary-blue), #5e9eff); color: white; box-shadow: 0 5px 15px rgba(10, 126, 255, 0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(10, 126, 255, 0.4); }
+        .pajak-fields { transition: all 0.3s ease-out; overflow: hidden; max-height: 500px; }
+        .pajak-fields.hidden { max-height: 0; opacity: 0; margin-bottom: -20px; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-layout">
+        
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue">
+                    <path d="M4 17V8a2 2 0 0 1 2-2h8.5L20 10.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/>
+                    <path d="M10 2v4"/><path d="M10 18v4"/><path d="M10 6h4"/><path d="M10 18h4"/><path d="M6 10h4"/><path d="M6 14h4"/>
+                </svg>
+                <span>E-Biro Jasa</span>
+            </div>
+            
+            <ul class="sidebar-nav">
+                <li><a href="#"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard Utama</span></a></li>
+                <li><a href="data_portal.html"><i class="fas fa-fw fa-money-check-alt"></i><span>Data Portal PKB</span></a></li>
+                <li><a href="management_akun.html"><i class="fas fa-fw fa-users"></i><span>Management Akun</span></a></li>
+                <li class="active"><a href="management_produk.html"><i class="fas fa-fw fa-box"></i><span>Management Produk</span></a></li>
+                <li><a href="pos.html"><i class="fas fa-fw fa-cash-register"></i><span>POS</span></a></li>
+                <li><a href="laporan_transaksi.html"><i class="fas fa-fw fa-chart-line"></i><span>Laporan Transaksi</span></a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            
+            <div class="topbar">
+                <div class="topbar-right">
+                    <a href="#" class="topbar-icon"> <i class="fas fa-bell"></i> <span class="badge">3</span> </a>
+                    <div class="user-menu"> <img src="https://via.placeholder.com/40" alt="User Avatar"> <span>Admin</span> <i class="fas fa-chevron-down"></i> </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="content-header-main">
+                    <div class="content-header-left">
+                        <button class="back-button"><i class="fas fa-chevron-left"></i></button>
+                        <h1>Management Produk Jasa</h1>
+                    </div>
+                    <a id="btn-add-main" class="btn-add-new">
+                        <i class="fas fa-plus"></i> Tambah Produk Baru
+                    </a>
+                </div>
+
+                <div class="page-controls">
+                    <div class="filter-controls">
+                        <select id="filter-kategori-jasa" class="filter-select">
+                            <option value="all">Semua Kategori Jasa</option>
+                            <option value="Produk Jasa Pajak">Produk Jasa Pajak</option>
+                            <option value="Produk Jasa Non-Pajak">Produk Jasa Non-Pajak</option>
+                        </select>
+                        <select id="filter-kategori-stnk" class="filter-select">
+                            <option value="all">Semua Kategori STNK</option>
+                            <option value="Mobil">Mobil</option>
+                            <option value="Motor">Motor</option>
+                        </select>
+                        <select id="filter-provinsi" class="filter-select">
+                            <option value="all">Semua Provinsi</option>
+                            <option value="DKI Jakarta">DKI Jakarta</option>
+                            <option value="Banten">Banten</option>
+                            <option value="Jawa Barat">Jawa Barat</option>
+                        </select>
+                    </div>
+                    <div class="table-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="product-search" placeholder="Cari berdasarkan Nama Produk Jasa">
+                    </div>
+                </div>
+
+                <div class="product-grid-wrapper">
+                    <div class="product-grid" id="product-grid-container">
+                        <div class="product-card" data-kategori-jasa="Produk Jasa Pajak" data-kategori-stnk="Motor" data-provinsi="DKI Jakarta" data-kota="Jakarta Pusat" data-nama="BBN Motor (Baru)" data-harga="500000" data-fee-dev="50000">
+                            <div class="product-card-header"> <span class="badge-kategori">Produk Jasa Pajak</span> </div>
+                            <div class="product-card-body"> <h3>BBN Motor (Baru)</h3> <span class="detail-item">Motor</span> <span class="detail-item">DKI Jakarta, Jakarta Pusat</span> </div>
+                            <div class="product-card-footer"> <span class="product-price">Rp 500.000</span> <div class="product-actions"> <a title="Edit" class="action-edit"><i class="fas fa-edit"></i></a> <a title="Hapus" class="action-delete"><i class="fas fa-trash-alt"></i></a> </div> </div>
+                        </div>
+                        <div class="product-card" data-kategori-jasa="Produk Jasa Non-Pajak" data-kategori-stnk="" data-provinsi="" data-kota="" data-nama="Jasa Cek Fisik Bantuan" data-harga="150000" data-fee-dev="15000">
+                            <div class="product-card-header"> <span class="badge-kategori non-pajak">Produk Jasa Non-Pajak</span> </div>
+                            <div class="product-card-body"> <h3>Jasa Cek Fisik Bantuan</h3> </div>
+                            <div class="product-card-footer"> <span class="product-price">Rp 150.000</span> <div class="product-actions"> <a title="Edit" class="action-edit"><i class="fas fa-edit"></i></a> <a title="Hapus" class="action-delete"><i class="fas fa-trash-alt"></i></a> </div> </div>
+                        </div>
+                        <div class="product-card" data-kategori-jasa="Produk Jasa Pajak" data-kategori-stnk="Mobil" data-provinsi="Banten" data-kota="Tangerang Selatan" data-nama="Perpanjang STNK Mobil 5 Tahunan" data-harga="750000" data-fee-dev="75000">
+                            <div class="product-card-header"> <span class="badge-kategori">Produk Jasa Pajak</span> </div>
+                            <div class="product-card-body"> <h3>Perpanjang STNK Mobil 5 Tahunan</h3> <span class="detail-item">Mobil</span> <span class="detail-item">Banten, Tangerang Selatan</span> </div>
+                            <div class="product-card-footer"> <span class="product-price">Rp 750.000</span> <div class="product-actions"> <a title="Edit" class="action-edit"><i class="fas fa-edit"></i></a> <a title="Hapus" class="action-delete"><i class="fas fa-trash-alt"></i></a> </div> </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pagination"> <a href="#">Previous</a> <a href="#" class="current-page">1</a> <a href="#">Next</a> </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="crud-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Tambah Produk Baru</h2>
+                <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+            </div>
+            <form id="crud-form">
+                <input type="hidden" id="form-mode" value="create">
+                <div class="form-group">
+                    <label for="produk-kategori-jasa">Kategori Jasa</label>
+                    <select id="produk-kategori-jasa" required>
+                        <option value="" disabled selected>Pilih Kategori Jasa</option>
+                        <option value="Produk Jasa Pajak">Produk Jasa Pajak</option>
+                        <option value="Produk Jasa Non-Pajak">Produk Jasa Non-Pajak</option>
+                    </select>
+                </div>
+                <div class="pajak-fields" id="pajak-fields-container">
+                    <div class="form-group">
+                        <label for="produk-kategori-stnk">Kategori STNK</label>
+                        <select id="produk-kategori-stnk">
+                            <option value="" disabled selected>Pilih Kategori STNK</option>
+                            <option value="Mobil">Mobil</option>
+                            <option value="Motor">Motor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="produk-provinsi">Provinsi STNK</label>
+                        <select id="produk-provinsi">
+                            <option value="" disabled selected>Pilih Provinsi</option>
+                            <option value="DKI Jakarta">DKI Jakarta</option>
+                            <option value="Banten">Banten</option>
+                            <option value="Jawa Barat">Jawa Barat</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="produk-kota">Kota/Kabupaten STNK</label>
+                        <select id="produk-kota">
+                            <option value="" disabled selected>Pilih Kota/Kabupaten</option>
+                            <option value="Jakarta Pusat">Jakarta Pusat</option>
+                            <option value="Tangerang Selatan">Tangerang Selatan</option>
+                            <option value="Bandung">Bandung</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="produk-nama">Nama Produk Jasa</label>
+                    <input type="text" id="produk-nama" placeholder="e.g: Perpanjang STNK 5 Tahunan" required>
+                </div>
+                <div class="form-group">
+                    <label for="produk-harga">Harga Jasa</label>
+                    <input type="number" id="produk-harga" placeholder="e.g: 500000" required>
+                </div>
+                <div class="form-group" id="fee-dev-group" style="display: none;">
+                    <label for="produk-fee-dev">Fee Dev</label>
+                    <input type="number" id="produk-fee-dev" placeholder="e.g: 50000">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="modal-cancel-btn">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const USER_LEVEL = 'Admin Dev'; 
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('crud-modal');
+            const btnAddMain = document.getElementById('btn-add-main');
+            const btnModalClose = document.getElementById('modal-close-btn');
+            const btnModalCancel = document.getElementById('modal-cancel-btn');
+            const crudForm = document.getElementById('crud-form');
+            const modalTitle = document.getElementById('modal-title');
+            const formMode = document.getElementById('form-mode');
+            const productGridContainer = document.getElementById('product-grid-container');
+            const inputKategoriJasa = document.getElementById('produk-kategori-jasa');
+            const pajakFieldsContainer = document.getElementById('pajak-fields-container');
+            const inputKategoriStnk = document.getElementById('produk-kategori-stnk');
+            const inputProvinsi = document.getElementById('produk-provinsi');
+            const inputKota = document.getElementById('produk-kota');
+            const inputNama = document.getElementById('produk-nama');
+            const inputHarga = document.getElementById('produk-harga');
+            const feeDevGroup = document.getElementById('fee-dev-group');
+            const inputFeeDev = document.getElementById('produk-fee-dev');
+            const filterKategoriJasa = document.getElementById('filter-kategori-jasa');
+            const filterKategoriStnk = document.getElementById('filter-kategori-stnk');
+            const filterProvinsi = document.getElementById('filter-provinsi');
+            const searchInput = document.getElementById('product-search');
+            let currentCardBeingEdited = null;
+            
+            const formatRupiah = (number) => {
+                return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(number);
+            };
+
+            const togglePajakFields = (kategori) => {
+                if (kategori === 'Produk Jasa Non-Pajak') {
+                    pajakFieldsContainer.classList.add('hidden');
+                    inputKategoriStnk.required = false;
+                    inputProvinsi.required = false;
+                    inputKota.required = false;
+                } else {
+                    pajakFieldsContainer.classList.remove('hidden');
+                    inputKategoriStnk.required = true;
+                    inputProvinsi.required = true;
+                    inputKota.required = true;
+                }
+            };
+            const toggleFeeDevField = () => {
+                if (USER_LEVEL === 'Admin Dev') {
+                    feeDevGroup.style.display = 'block';
+                } else {
+                    feeDevGroup.style.display = 'none';
+                }
+            };
+            const showModal = (mode, cardElement = null) => {
+                formMode.value = mode;
+                crudForm.reset();
+                toggleFeeDevField();
+                if (mode === 'create') {
+                    modalTitle.textContent = 'Tambah Produk Baru';
+                    currentCardBeingEdited = null;
+                    togglePajakFields('');
+                    inputKategoriJasa.value = "";
+                    inputKategoriStnk.value = "";
+                    inputProvinsi.value = "";
+                    inputKota.value = "";
+                } else if (mode === 'update') {
+                    modalTitle.textContent = 'Edit Produk Jasa';
+                    currentCardBeingEdited = cardElement;
+                    const data = cardElement.dataset;
+                    inputKategoriJasa.value = data.kategoriJasa;
+                    inputKategoriStnk.value = data.kategoriStnk;
+                    inputProvinsi.value = data.provinsi;
+                    inputKota.value = data.kota;
+                    inputNama.value = data.nama;
+                    inputHarga.value = data.harga;
+                    inputFeeDev.value = data.feeDev;
+                    togglePajakFields(data.kategoriJasa);
+                }
+                modal.classList.add('show');
+            };
+            const hideModal = () => { modal.classList.remove('show'); crudForm.reset(); currentCardBeingEdited = null; };
+            const createCardHTML = (data) => {
+                const kategoriBadge = data.kategoriJasa === 'Produk Jasa Non-Pajak' 
+                    ? `<span class="badge-kategori non-pajak">Produk Jasa Non-Pajak</span>`
+                    : `<span class="badge-kategori">Produk Jasa Pajak</span>`;
+                let detailHTML = '';
+                if (data.kategoriJasa === 'Produk Jasa Pajak') {
+                    detailHTML = `<span class="detail-item">${data.kategoriStnk}</span> <span class="detail-item">${data.provinsi}, ${data.kota}</span>`;
+                }
+                return `<div class="product-card-header"> ${kategoriBadge} </div> <div class="product-card-body"> <h3>${data.nama}</h3> ${detailHTML} </div> <div class="product-card-footer"> <span class="product-price">${formatRupiah(data.harga)}</span> <div class="product-actions"> <a title="Edit" class="action-edit"><i class="fas fa-edit"></i></a> <a title="Hapus" class="action-delete"><i class="fas fa-trash-alt"></i></a> </div> </div>`;
+            };
+            const addCardToGrid = (data) => {
+                const newCard = document.createElement('div');
+                newCard.className = 'product-card';
+                Object.keys(data).forEach(key => { newCard.dataset[key] = data[key]; });
+                newCard.innerHTML = createCardHTML(data);
+                productGridContainer.appendChild(newCard);
+                addEventListenersToCard(newCard);
+            };
+            const updateCardInGrid = (cardElement, data) => {
+                Object.keys(data).forEach(key => { cardElement.dataset[key] = data[key]; });
+                cardElement.innerHTML = createCardHTML(data);
+                addEventListenersToCard(cardElement);
+            };
+            const deleteCard = (cardElement) => { if (confirm('Anda yakin ingin menghapus produk ini?')) { cardElement.remove(); } };
+            const addEventListenersToCard = (cardElement) => {
+                const editBtn = cardElement.querySelector('.action-edit');
+                const deleteBtn = cardElement.querySelector('.action-delete');
+                editBtn.addEventListener('click', () => { showModal('update', cardElement); });
+                deleteBtn.addEventListener('click', () => { deleteCard(cardElement); });
+            };
+            const updateGridVisibility = () => {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedKategoriJasa = filterKategoriJasa.value;
+                const selectedKategoriStnk = filterKategoriStnk.value;
+                const selectedProvinsi = filterProvinsi.value;
+                productGridContainer.querySelectorAll('.product-card').forEach(card => {
+                    const cardData = card.dataset;
+                    const matchSearch = cardData.nama.toLowerCase().includes(searchTerm);
+                    const matchJasa = (selectedKategoriJasa === "all" || cardData.kategoriJasa === selectedKategoriJasa);
+                    const matchStnk = (selectedKategoriStnk === "all" || cardData.kategoriStnk === selectedKategoriStnk);
+                    const matchProvinsi = (selectedProvinsi === "all" || cardData.provinsi === selectedProvinsi);
+                    if (matchSearch && matchJasa && matchStnk && matchProvinsi) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            };
+            
+            btnAddMain.addEventListener('click', () => { showModal('create'); });
+            btnModalClose.addEventListener('click', hideModal);
+            btnModalCancel.addEventListener('click', hideModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) { hideModal(); } });
+            inputKategoriJasa.addEventListener('change', (e) => { togglePajakFields(e.target.value); });
+            
+            crudForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const data = {
+                    kategoriJasa: inputKategoriJasa.value,
+                    kategoriStnk: inputKategoriJasa.value === 'Produk Jasa Pajak' ? inputKategoriStnk.value : '',
+                    provinsi: inputKategoriJasa.value === 'Produk Jasa Pajak' ? inputProvinsi.value : '',
+                    kota: inputKategoriJasa.value === 'Produk Jasa Pajak' ? inputKota.value : '',
+                    nama: inputNama.value,
+                    harga: inputHarga.value,
+                    feeDev: inputFeeDev.value || 0
+                };
+                if (formMode.value === 'create') { addCardToGrid(data); } else if (formMode.value === 'update') { updateCardInGrid(currentCardBeingEdited, data); }
+                hideModal();
+                updateGridVisibility();
+            });
+            
+            productGridContainer.querySelectorAll('.product-card').forEach(card => { addEventListenersToCard(card); });
+            
+            searchInput.addEventListener('keyup', updateGridVisibility);
+            filterKategoriJasa.addEventListener('change', updateGridVisibility);
+            filterKategoriStnk.addEventListener('change', updateGridVisibility);
+            filterProvinsi.addEventListener('change', updateGridVisibility);
+        });
+    </script>
+</body>
+</html>
